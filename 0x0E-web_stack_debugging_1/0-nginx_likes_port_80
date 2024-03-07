@@ -1,0 +1,24 @@
+#!/bin/bash
+
+# Check Nginx configuration
+if ! grep -q "listen 80;" /etc/nginx/sites-available/default; then
+    sed -i 's/listen 80;/listen 80 default_server;/g' /etc/nginx/sites-available/default
+fi
+
+# Verify no other process is listening on port 80
+if ! lsof -i :80 >/dev/null 2>&1; then
+    echo "No other process is listening on port 80."
+else
+    echo "Another process is already listening on port 80. Exiting."
+    exit 1
+fi
+
+# Restart Nginx service
+service nginx restart
+
+# Verify Nginx is now listening on port 80
+if lsof -i :80 >/dev/null 2>&1; then
+    echo "Nginx is now listening on port 80."
+else
+    echo "Nginx is not listening on port 80. Please check the configuration."
+fi
