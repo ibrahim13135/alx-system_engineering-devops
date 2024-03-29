@@ -1,38 +1,30 @@
 #!/usr/bin/python3
+"""For a given employee ID, returns information about
+their TODO list progress"""
+
 import requests
-from sys import argv
+import sys
 
 if __name__ == "__main__":
-    if len(argv) != 2 or not argv[1].isdigit():
-        print("Usage: python3 {} employee_id".format(argv[0]))
-        exit(1)
 
-    employee_id = int(argv[1])
+    userId = sys.argv[1]
+    user = requests.get("https://jsonplaceholder.typicode.com/users/{}"
+                        .format(userId))
 
-    # Fetching employee info
-    user_response = requests.get(
-        'https://jsonplaceholder.typicode.com/users/{}'.format(employee_id))
-    todos_response = requests.get(
-        'https://jsonplaceholder.typicode.com/todos?userId={}'.format(employee_id))
+    name = user.json().get('name')
 
-    if user_response.status_code != 200:
-        print("User not found")
-        exit(1)
+    todos = requests.get('https://jsonplaceholder.typicode.com/todos')
+    totalTasks = 0
+    completed = 0
 
-    if todos_response.status_code != 200:
-        print("TODOs not found")
-        exit(1)
+    for task in todos.json():
+        if task.get('userId') == int(userId):
+            totalTasks += 1
+            if task.get('completed'):
+                completed += 1
 
-    user_data = user_response.json()
-    todos_data = todos_response.json()
+    print('Employee {} is done with tasks({}/{}):'
+          .format(name, completed, totalTasks))
 
-    # Calculating TODO progress
-    total_tasks = len(todos_data)
-    done_tasks = sum(1 for task in todos_data if task['completed'])
-
-    # Displaying progress
-    print("Employee {} is done with tasks({}/{}):".format(
-        user_data['name'], done_tasks, total_tasks))
-    for task in todos_data:
-        if task['completed']:
-            print("\t{}".format(task['title']))
+    print('\n'.join(["\t " + task.get('title') for task in todos.json()
+          if task.get('userId') == int(userId) and task.get('completed')]))
