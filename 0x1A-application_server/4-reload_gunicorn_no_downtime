@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+# Get the PID of the Gunicorn master process
+MASTER_PID=$(ps aux | grep '[g]unicorn' | awk '{print $2}')
+
+# Display the PID of the Gunicorn master process
+echo "Gunicorn master process PID: $MASTER_PID"
+
+# Gracefully reload Gunicorn
+kill -HUP $MASTER_PID
+
+# Display a message indicating that Gunicorn is reloading
+echo "Reloading Gunicorn..."
